@@ -20,11 +20,16 @@ class WeixinMessageEncryptor
     aes_encrypt(payload).delete("\n")
   end
 
-  def encrypt_to_xml(payload)
+  def encrypt_with_signature(payload)
     encrypted_payload = encrypt(payload)
     timestamp = Time.now.to_i.to_s
     nonce = SecureRandom.hex(8)
     signature = generate_signature(encrypted_payload, timestamp, nonce)
+    return [encrypted_payload, timestamp, nonce, signature]
+  end
+
+  def encrypt_to_xml(payload)
+    encrypted_payload, timestamp, nonce, signature = encrypt_with_signature(payload)
     <<XML
 <xml>
 <Encrypt><![CDATA[#{encrypted_payload}]]></Encrypt>
