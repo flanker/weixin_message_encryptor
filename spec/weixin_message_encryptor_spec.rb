@@ -18,10 +18,12 @@ RSpec.describe WeixinMessageEncryptor do
 
   context '#encrypt' do
 
-    let(:expected_encrypted) do
+    let(:expected_encrypted) { 'od2fsaJOhtlyv5DB3LVSmnUj+NyJhjzXp3rGInQJ2TnXMAGmZk5Xbe78X9KlQbAh9EUZtpI6sm3r+HKau1gkUw==' }
+
+    let(:expected_encrypted_xml) do
       <<XML
 <xml>
-<Encrypt><![CDATA[od2fsaJOhtlyv5DB3LVSmnUj+NyJhjzXp3rGInQJ2TnXMAGmZk5Xbe78X9KlQbAh9EUZtpI6sm3r+HKau1gkUw==]]></Encrypt>
+<Encrypt><![CDATA[#{expected_encrypted}]]></Encrypt>
 <MsgSignature><![CDATA[c259384cc497c5e89770524a8ff669274df330da]]></MsgSignature>
 <TimeStamp>1503885600</TimeStamp>
 <Nonce><![CDATA[d8a578a6e9daf581]]></Nonce>
@@ -29,12 +31,20 @@ RSpec.describe WeixinMessageEncryptor do
 XML
     end
 
-    it 'encrypts message with signature' do
-      expect(SecureRandom).to receive(:hex).twice.with(8).and_return('d8a578a6e9daf582', 'd8a578a6e9daf581')
+    it 'encrypts the message only' do
+      expect(SecureRandom).to receive(:hex).once.with(8).and_return('d8a578a6e9daf582')
 
       encrypted = encryptor.encrypt 'plain text message'
 
       expect(encrypted).to eq expected_encrypted
+    end
+
+    it 'encrypts message to xml with signature' do
+      expect(SecureRandom).to receive(:hex).twice.with(8).and_return('d8a578a6e9daf582', 'd8a578a6e9daf581')
+
+      encrypted = encryptor.encrypt_to_xml 'plain text message'
+
+      expect(encrypted).to eq expected_encrypted_xml
     end
 
   end

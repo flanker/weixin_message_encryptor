@@ -17,8 +17,22 @@ class WeixinMessageEncryptor
   end
 
   def encrypt(payload)
-    encrypted_payload = aes_encrypt(payload).delete("\n")
-    encrypted_message(encrypted_payload)
+    aes_encrypt(payload).delete("\n")
+  end
+
+  def encrypt_to_xml(payload)
+    encrypted_payload = encrypt(payload)
+    timestamp = Time.now.to_i.to_s
+    nonce = SecureRandom.hex(8)
+    signature = generate_signature(encrypted_payload, timestamp, nonce)
+    <<XML
+<xml>
+<Encrypt><![CDATA[#{encrypted_payload}]]></Encrypt>
+<MsgSignature><![CDATA[#{signature}]]></MsgSignature>
+<TimeStamp>#{timestamp}</TimeStamp>
+<Nonce><![CDATA[#{nonce}]]></Nonce>
+</xml>
+XML
   end
 
   def decrypt(payload)
@@ -32,20 +46,6 @@ class WeixinMessageEncryptor
 
   def aes_key
     @aes_key ||= Base64.decode64 encoding_aes_key + '='
-  end
-
-  def encrypted_message(encrypted_payload)
-    timestamp = Time.now.to_i.to_s
-    nonce = SecureRandom.hex(8)
-    signature = generate_signature(encrypted_payload, timestamp, nonce)
-    <<XML
-<xml>
-<Encrypt><![CDATA[#{encrypted_payload}]]></Encrypt>
-<MsgSignature><![CDATA[#{signature}]]></MsgSignature>
-<TimeStamp>#{timestamp}</TimeStamp>
-<Nonce><![CDATA[#{nonce}]]></Nonce>
-</xml>
-XML
   end
 
   def decrypt_payload(encrypted_payload)
